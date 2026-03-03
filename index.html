@@ -1,90 +1,622 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>GingyNAS // Portal</title>
+<meta name="description" content="GingyNAS self-hosted services portal." />
 <style>
-body{
-  margin:0;
-  font-family:system-ui;
-  background:#0b0f1a;
-  color:white;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:100vh;
-}
-.container{
-  width:min(1000px,100%);
-  padding:40px;
-}
-h1{margin:0 0 10px 0;font-size:32px;}
-.subtitle{color:#94a3b8;margin-bottom:30px;}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-  gap:20px;
-}
-.card{
-  background:#111827;
-  border:1px solid #1f2937;
-  border-radius:14px;
-  padding:20px;
-  transition:.15s ease;
-  text-decoration:none;
-  color:white;
-}
-.card:hover{
-  transform:translateY(-4px);
-  border-color:#3b82f6;
-}
-.tag{
-  font-size:12px;
-  opacity:.6;
-  margin-bottom:10px;
-}
-.addr{
-  margin-top:15px;
-  font-family:monospace;
-  font-size:12px;
-  opacity:.6;
-}
-footer{
-  margin-top:40px;
-  font-size:12px;
-  opacity:.5;
-}
+  :root{
+    --bg:#070a12;
+    --panel:rgba(255,255,255,.06);
+    --panel2:rgba(255,255,255,.035);
+    --border:rgba(255,255,255,.12);
+    --text:#eaf0ff;
+    --muted:rgba(234,240,255,.72);
+    --muted2:rgba(234,240,255,.55);
+    --glow:rgba(120,170,255,.35);
+    --ok:#3ddc97;
+    --warn:#ffd166;
+    --bad:#ff5c7a;
+    --shadow: 0 18px 70px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    min-height:100vh;
+    background:
+      radial-gradient(1200px 700px at 20% -10%, rgba(120,170,255,.18), transparent 60%),
+      radial-gradient(1000px 600px at 90% 10%, rgba(61,220,151,.12), transparent 55%),
+      radial-gradient(900px 600px at 30% 120%, rgba(255,92,122,.10), transparent 60%),
+      var(--bg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px;
+  }
+  .wrap{width:min(1100px,100%)}
+  .topbar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  .brand{display:flex; gap:14px; align-items:center}
+  .logo{
+    width:46px; height:46px; border-radius:16px;
+    background: linear-gradient(180deg, rgba(120,170,255,.25), rgba(255,255,255,.06));
+    border:1px solid var(--border);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.03) inset, var(--shadow);
+    display:grid; place-items:center;
+  }
+  h1{margin:0; font-size: clamp(22px, 2.6vw, 34px); letter-spacing:.3px}
+  .sub{margin:4px 0 0; color:var(--muted); font-size:14px; line-height:1.35}
+  .pillrow{display:flex; gap:10px; flex-wrap:wrap}
+  .pill{
+    display:flex; align-items:center; gap:8px;
+    padding:10px 12px;
+    border-radius:999px;
+    background: var(--panel);
+    border:1px solid var(--border);
+    backdrop-filter: blur(10px);
+    font-size:13px;
+    color:var(--muted);
+  }
+  .dot{width:8px; height:8px; border-radius:99px; background:var(--ok); box-shadow: 0 0 18px rgba(61,220,151,.55)}
+  .dot.warn{background:var(--warn); box-shadow: 0 0 18px rgba(255,209,102,.45)}
+  .dot.bad{background:var(--bad); box-shadow: 0 0 18px rgba(255,92,122,.45)}
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap:14px;
+  }
+  .card{
+    grid-column: span 4;
+    background: linear-gradient(180deg, var(--panel), var(--panel2));
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:16px;
+    backdrop-filter: blur(14px);
+    box-shadow: var(--shadow);
+    transition: transform .10s ease, border-color .10s ease;
+    cursor:pointer;
+    position:relative;
+    overflow:hidden;
+  }
+  .card:before{
+    content:"";
+    position:absolute; inset:-1px;
+    background: radial-gradient(420px 220px at 20% 0%, rgba(120,170,255,.16), transparent 55%);
+    pointer-events:none;
+  }
+  .card:hover{transform: translateY(-2px); border-color: rgba(120,170,255,.35)}
+  .head{display:flex; align-items:center; justify-content:space-between; gap:12px; position:relative}
+  .title{display:flex; align-items:center; gap:10px; font-weight:750; letter-spacing:.2px}
+  .icon{
+    width:34px; height:34px; border-radius:14px;
+    display:grid; place-items:center;
+    background: rgba(120,170,255,.12);
+    border:1px solid rgba(120,170,255,.25);
+  }
+  .tag{
+    font-size:12px; color:var(--muted2);
+    border:1px solid var(--border);
+    background: rgba(255,255,255,.03);
+    padding:6px 10px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+  .desc{margin:12px 0 0; color:var(--muted); font-size:14px; line-height:1.45; position:relative}
+  .row{margin-top:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; position:relative}
+  .addr{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size:12px;
+    color:var(--muted2);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .btns{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+  .btn{
+    appearance:none; border:none; cursor:pointer;
+    padding:9px 10px;
+    border-radius:12px;
+    background: rgba(120,170,255,.14);
+    border:1px solid rgba(120,170,255,.28);
+    color:var(--text);
+    font-weight:700;
+    font-size:13px;
+    display:inline-flex; align-items:center; gap:8px;
+    text-decoration:none;
+  }
+  .btn.secondary{
+    background: rgba(255,255,255,.06);
+    border:1px solid var(--border);
+    color:var(--muted);
+    font-weight:650;
+  }
+  .btn:active{transform: translateY(1px)}
+  .wide{grid-column: span 12}
+
+  .footer{
+    margin-top:14px;
+    display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    color:var(--muted2);
+    font-size:12px;
+  }
+
+  /* Modal */
+  .modal{
+    position:fixed; inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:22px;
+    background: rgba(0,0,0,.55);
+    backdrop-filter: blur(6px);
+    z-index:1000;
+  }
+  .modalBox{
+    width:min(720px, 100%);
+    background: linear-gradient(180deg, rgba(20,26,40,.92), rgba(12,16,28,.92));
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:18px;
+    box-shadow: 0 30px 120px rgba(0,0,0,.6);
+    padding:16px;
+  }
+  .modalTop{
+    display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+    margin-bottom:10px;
+  }
+  .mTitle{font-size:18px; font-weight:800; letter-spacing:.2px}
+  .mDesc{color:var(--muted); font-size:14px; margin-top:4px; line-height:1.4}
+  .x{
+    border:none; cursor:pointer;
+    width:36px; height:36px; border-radius:12px;
+    background: rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.12);
+    color:var(--text);
+    font-size:16px;
+  }
+  .mAddrRow{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin:12px 0;
+    padding:12px;
+    border-radius:14px;
+    background: rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.10);
+  }
+  code{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size:12px;
+    color:rgba(234,240,255,.85);
+    word-break:break-all;
+  }
+  .mBtns{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
+  .mHow{
+    margin-top:12px;
+    color:var(--muted);
+    font-size:14px;
+    line-height:1.5;
+  }
+  .mHow b{color:rgba(234,240,255,.92)}
+  .mHow ol{margin:8px 0 0 20px}
+  .toast{
+    opacity:0;
+    transition: opacity .15s ease;
+  }
+  .toast.on{opacity:1}
+  @media (max-width: 980px){ .card{grid-column: span 6} }
+  @media (max-width: 680px){ .card{grid-column: span 12} }
 </style>
 </head>
+
 <body>
-<div class="container">
-  <h1>GingyNAS</h1>
-  <div class="subtitle">Self-Hosted Infrastructure Portal</div>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2l8.5 5v10L12 22 3.5 17V7L12 2z" stroke="rgba(234,240,255,.9)" stroke-width="1.6"/>
+          <path d="M3.5 7l8.5 5 8.5-5" stroke="rgba(234,240,255,.65)" stroke-width="1.6"/>
+          <path d="M12 12v10" stroke="rgba(234,240,255,.55)" stroke-width="1.6"/>
+        </svg>
+      </div>
+      <div>
+        <h1>GingyNAS // Portal</h1>
+        <div class="sub" id="subtitle">Self-hosted services • edge-hosted landing • your IPs stay your problem</div>
+      </div>
+    </div>
 
-  <div class="grid">
-    <a class="card" href="https://cloud.gingynas.net">
-      <div class="tag">PRIVATE</div>
-      <h2>☁ Family Cloud</h2>
-      <div class="addr">cloud.gingynas.net</div>
-    </a>
-
-    <a class="card" href="minecraft://mc.gingynas.net">
-      <div class="tag">GAME</div>
-      <h2>⛏ Minecraft</h2>
-      <div class="addr">mc.gingynas.net:25565</div>
-    </a>
-
-    <a class="card" href="ts3server://ts.gingynas.net">
-      <div class="tag">VOICE</div>
-      <h2>🎙 TeamSpeak</h2>
-      <div class="addr">ts.gingynas.net</div>
-    </a>
+    <div class="pillrow">
+      <div class="pill"><span class="dot"></span> Edge: Cloudflare Pages</div>
+      <div class="pill"><span class="dot"></span> Core: Unraid</div>
+      <div class="pill" id="exposurePill"><span class="dot warn" id="exposureDot"></span> Exposure: Internet</div>
+    </div>
   </div>
 
-  <footer>
-    © gingynas.net • Hosted via Cloudflare Edge
-  </footer>
+  <div class="grid">
+    <!-- Family Cloud -->
+    <div class="card" onclick="openService('cloud')" role="button" tabindex="0">
+      <div class="head">
+        <div class="title"><span class="icon">☁️</span>Family Cloud</div>
+        <span class="tag">Private</span>
+      </div>
+      <div class="desc">Files/photos for the fam. Auth required. WAF rules get spicy.</div>
+      <div class="row">
+        <div class="addr">cloud.gingynas.net</div>
+        <div class="btns">
+          <span class="btn secondary" aria-hidden="true">Details</span>
+          <span class="btn" aria-hidden="true">Open →</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Minecraft -->
+    <div class="card" onclick="openService('mc')" role="button" tabindex="0">
+      <div class="head">
+        <div class="title"><span class="icon">⛏️</span>Minecraft</div>
+        <span class="tag">Game</span>
+      </div>
+      <div class="desc">Java default: copy address → paste in Multiplayer. Optional Bedrock link toggle.</div>
+      <div class="row">
+        <div class="addr">mc.gingynas.net:25565</div>
+        <div class="btns">
+          <span class="btn secondary" aria-hidden="true">How to join</span>
+          <span class="btn" aria-hidden="true">Connect →</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TeamSpeak -->
+    <div class="card" onclick="openService('ts')" role="button" tabindex="0">
+      <div class="head">
+        <div class="title"><span class="icon">🎙️</span>TeamSpeak</div>
+        <span class="tag">Voice</span>
+      </div>
+      <div class="desc">Deep-link tries to open the TS client, with copy fallback.</div>
+      <div class="row">
+        <div class="addr">ts.gingynas.net</div>
+        <div class="btns">
+          <span class="btn secondary" aria-hidden="true">Details</span>
+          <span class="btn" aria-hidden="true">Connect →</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="card wide" onclick="openService('status')" role="button" tabindex="0">
+      <div class="head">
+        <div class="title"><span class="icon">📈</span>Status</div>
+        <span class="tag">Observability</span>
+      </div>
+      <div class="desc">
+        Recommended: run Uptime Kuma on Unraid and expose <b>status.gingynas.net</b> (or keep it private on Tailscale).
+        This tile is ready—just set the URL.
+      </div>
+      <div class="row">
+        <div class="addr" id="statusAddr">status.gingynas.net</div>
+        <div class="btns">
+          <span class="btn secondary" aria-hidden="true">Setup hint</span>
+          <span class="btn" aria-hidden="true">Open →</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin (hidden unless LAN/Tailscale) -->
+    <div class="card wide" id="adminCard" style="display:none" onclick="openService('admin')" role="button" tabindex="0">
+      <div class="head">
+        <div class="title"><span class="icon">🔧</span>Admin</div>
+        <span class="tag">LAN / Tailscale only</span>
+      </div>
+      <div class="desc">
+        Admin links only show when you’re likely on LAN/Tailscale. (Not a security boundary—just UI.)
+      </div>
+      <div class="row">
+        <div class="addr" id="adminAddr">npm.gingynas.net</div>
+        <div class="btns">
+          <span class="btn secondary" aria-hidden="true">Copy</span>
+          <span class="btn" aria-hidden="true">Open →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>© gingynas.net • Served from Cloudflare edge</div>
+    <div id="toast" class="toast">Copied.</div>
+  </div>
 </div>
+
+<!-- Modal -->
+<div id="modal" class="modal" role="dialog" aria-modal="true" aria-label="Service details">
+  <div class="modalBox">
+    <div class="modalTop">
+      <div>
+        <div id="mTitle" class="mTitle"></div>
+        <div id="mDesc" class="mDesc"></div>
+      </div>
+      <button class="x" onclick="closeModal()" aria-label="Close">✕</button>
+    </div>
+
+    <div class="mAddrRow">
+      <code id="mAddr"></code>
+      <button class="btn secondary" type="button" onclick="copyAddr()">Copy</button>
+    </div>
+
+    <div class="mBtns">
+      <a id="mPrimary" class="btn" href="#" onclick="return doPrimary()">Open</a>
+      <a id="mAlt" class="btn secondary" href="#" style="display:none">Alt</a>
+      <button id="mCopyBtn" class="btn secondary" type="button" onclick="copyAddr()" style="display:none">Copy</button>
+    </div>
+
+    <div id="mHow" class="mHow"></div>
+  </div>
+</div>
+
+<script>
+  // ========= CONFIG (edit these) =========
+  const CFG = {
+    cloudUrl: "https://cloud.gingynas.net",
+    mcHost: "mc.gingynas.net",
+    mcPortJava: 25565,
+    // Set true only if you actually support Bedrock (19132) or have Geyser/crossplay:
+    enableBedrockLink: false,
+    mcPortBedrock: 19132,
+
+    tsHost: "ts.gingynas.net",
+    // Status page URL (set once you deploy Uptime Kuma etc.)
+    statusUrl: "https://status.gingynas.net",
+
+    // Optional admin links (show only on LAN/Tailscale by heuristic)
+    npmUrl: "https://npm.gingynas.net",
+    unraidUrl: "https://tower.local" // or https://unraid.gingynas.net (if you expose it privately)
+  };
+
+  // ========= Service definitions =========
+  const services = {
+    cloud: {
+      title: "Family Cloud",
+      addr: "cloud.gingynas.net",
+      desc: "Nextcloud (or equivalent). Login required.",
+      primaryLabel: "Open",
+      primaryHref: () => CFG.cloudUrl,
+      how: `
+        <b>Notes:</b>
+        <ul>
+          <li>Accounts are restricted to family.</li>
+          <li>If you get blocked, text Cameron (you probably tripped WAF).</li>
+        </ul>
+      `,
+      showAlt: false,
+      showCopyPrimary: false
+    },
+
+    mc: {
+      title: "Minecraft (Java)",
+      addr: () => `${CFG.mcHost}:${CFG.mcPortJava}`,
+      desc: "Best default: copy the address and add it in-game (works everywhere).",
+      // primary is copy (most reliable)
+      primaryLabel: "Copy address",
+      primaryHref: () => "#",
+      how: () => `
+        <b>How to join (Java):</b>
+        <ol>
+          <li>Open Minecraft → <b>Multiplayer</b></li>
+          <li><b>Add Server</b></li>
+          <li>Server Address: <b>${CFG.mcHost}</b> (port <b>${CFG.mcPortJava}</b>)</li>
+        </ol>
+        <div style="margin-top:10px; color: rgba(234,240,255,.58); font-size:13px;">
+          Deep links for Java are inconsistent across browsers/OS, so this page prioritizes the reliable path.
+        </div>
+      `,
+      showAlt: () => CFG.enableBedrockLink,
+      altLabel: "Open in Bedrock",
+      altHref: () => `minecraft://?addExternalServer=GingyNAS|${CFG.mcHost}:${CFG.mcPortBedrock}`,
+      showCopyPrimary: true
+    },
+
+    ts: {
+      title: "TeamSpeak",
+      addr: () => CFG.tsHost,
+      desc: "Connect will try to open TeamSpeak automatically via ts3server://",
+      primaryLabel: "Connect",
+      primaryHref: () => `ts3server://${CFG.tsHost}`,
+      how: () => `
+        <b>If the link doesn’t open:</b>
+        <ol>
+          <li>Open TeamSpeak</li>
+          <li>Connections → <b>Connect</b></li>
+          <li>Server Address: <b>${CFG.tsHost}</b></li>
+        </ol>
+      `,
+      showAlt: false,
+      showCopyPrimary: false
+    },
+
+    status: {
+      title: "Status",
+      addr: "status.gingynas.net",
+      desc: "Recommended: Uptime Kuma (or equivalent) for public/private status dashboards.",
+      primaryLabel: "Open",
+      primaryHref: () => CFG.statusUrl,
+      how: () => `
+        <b>Setup (later, on Unraid):</b>
+        <ol>
+          <li>Install <b>Uptime Kuma</b> from Community Apps</li>
+          <li>Expose it at <b>status.gingynas.net</b> via NPM</li>
+          <li>Optionally restrict it (Cloudflare Access / IP allowlist / Tailscale)</li>
+        </ol>
+      `,
+      showAlt: false,
+      showCopyPrimary: false
+    },
+
+    admin: {
+      title: "Admin",
+      addr: () => `NPM: ${CFG.npmUrl} • Unraid: ${CFG.unraidUrl}`,
+      desc: "Quick admin links. UI-only gating based on network heuristics.",
+      primaryLabel: "Open NPM",
+      primaryHref: () => CFG.npmUrl,
+      how: () => `
+        <b>Links:</b>
+        <ul>
+          <li><b>NPM:</b> ${CFG.npmUrl}</li>
+          <li><b>Unraid:</b> ${CFG.unraidUrl}</li>
+        </ul>
+        <div style="margin-top:10px; color: rgba(234,240,255,.58); font-size:13px;">
+          If you want real protection, keep these behind Tailscale or Cloudflare Access.
+        </div>
+      `,
+      showAlt: true,
+      altLabel: "Open Unraid",
+      altHref: () => CFG.unraidUrl,
+      showCopyPrimary: false
+    }
+  };
+
+  // ========= Modal state =========
+  let currentKey = null;
+
+  function openService(key){
+    currentKey = key;
+    const s = services[key];
+
+    const title = s.title;
+    const desc = s.desc;
+    const addr = (typeof s.addr === "function") ? s.addr() : s.addr;
+    const how = (typeof s.how === "function") ? s.how() : s.how;
+
+    document.getElementById("mTitle").textContent = title;
+    document.getElementById("mDesc").textContent = desc;
+    document.getElementById("mAddr").textContent = addr;
+    document.getElementById("mHow").innerHTML = how;
+
+    const primary = document.getElementById("mPrimary");
+    primary.textContent = s.primaryLabel;
+    primary.href = (typeof s.primaryHref === "function") ? s.primaryHref() : s.primaryHref;
+
+    // Alt button
+    const alt = document.getElementById("mAlt");
+    const showAlt = (typeof s.showAlt === "function") ? s.showAlt() : !!s.showAlt;
+    if (showAlt){
+      alt.style.display = "inline-flex";
+      alt.textContent = s.altLabel;
+      alt.href = (typeof s.altHref === "function") ? s.altHref() : s.altHref;
+    } else {
+      alt.style.display = "none";
+    }
+
+    // Optional explicit Copy button
+    const copyBtn = document.getElementById("mCopyBtn");
+    copyBtn.style.display = s.showCopyPrimary ? "inline-flex" : "none";
+
+    document.getElementById("modal").style.display = "flex";
+  }
+
+  function closeModal(){
+    document.getElementById("modal").style.display = "none";
+  }
+
+  // Close modal on background click
+  document.getElementById("modal").addEventListener("click", (e) => {
+    if (e.target.id === "modal") closeModal();
+  });
+
+  // ESC closes modal
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
+  });
+
+  function toast(msg){
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("on");
+    clearTimeout(window.__toastT);
+    window.__toastT = setTimeout(()=>el.classList.remove("on"), 1200);
+  }
+
+  function copyAddr(){
+    if (!currentKey) return;
+    const s = services[currentKey];
+    const addr = (typeof s.addr === "function") ? s.addr() : s.addr;
+
+    navigator.clipboard.writeText(addr)
+      .then(()=>toast("Copied: " + addr))
+      .catch(()=>toast("Copy failed (browser blocked)."));
+  }
+
+  // For Minecraft, primary action is copy. For others, follow link.
+  function doPrimary(){
+    if (!currentKey) return false;
+    const s = services[currentKey];
+    const href = (typeof s.primaryHref === "function") ? s.primaryHref() : s.primaryHref;
+
+    if (href === "#"){
+      copyAddr();
+      return false;
+    }
+    return true;
+  }
+
+  // ========= Admin card heuristics =========
+  // We can’t reliably detect your LAN/Tailscale from a static site without your own API,
+  // so we use a *hint* based on local network names + a manual toggle (Ctrl+Shift+A).
+  function likelyLocal(){
+    const h = location.hostname.toLowerCase();
+    // If you're hitting the site via a local hostname (rare with Pages) or using a split-DNS:
+    if (h.endsWith(".local") || h.includes("tower")) return true;
+    return false;
+  }
+
+  // Manual toggle for admin card (because network detection is limited on a static edge page)
+  let adminEnabled = false;
+  function setAdminVisible(on){
+    adminEnabled = on;
+    document.getElementById("adminCard").style.display = on ? "block" : "none";
+    const dot = document.getElementById("exposureDot");
+    const pill = document.getElementById("exposurePill");
+    if (on){
+      dot.classList.remove("warn");
+      dot.classList.add("ok");
+      pill.innerHTML = '<span class="dot"></span> Exposure: Trusted network';
+    } else {
+      pill.innerHTML = '<span class="dot warn" id="exposureDot"></span> Exposure: Internet';
+      // restore dot ref (since we replaced innerHTML)
+      // quick fix: reload page styles by re-reading element; simplest is set text only:
+      // (We’ll just leave the pill updated; functionally fine.)
+    }
+  }
+
+  window.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.shiftKey && (e.key === "A" || e.key === "a")){
+      setAdminVisible(!adminEnabled);
+      toast(adminEnabled ? "Admin tile enabled" : "Admin tile hidden");
+    }
+  });
+
+  // ========= Init =========
+  // Set addresses in tiles from config
+  document.getElementById("statusAddr").textContent = (new URL(CFG.statusUrl)).host;
+  document.getElementById("adminAddr").textContent = (new URL(CFG.npmUrl)).host;
+
+  // Show admin automatically only if we *think* local (usually false on Pages), otherwise hidden.
+  if (likelyLocal()) setAdminVisible(true);
+
+  // Accessibility: Enter key activates card
+  document.querySelectorAll(".card[tabindex='0']").forEach(el=>{
+    el.addEventListener("keydown", (e)=>{
+      if (e.key === "Enter" || e.key === " "){
+        e.preventDefault();
+        el.click();
+      }
+    });
+  });
+</script>
 </body>
 </html>
