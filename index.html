@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GingyNAS // Portal</title>
+<style>
+body{
+  margin:0;
+  font-family:system-ui;
+  background:#0b0f1a;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+}
+.container{
+  width:min(1000px,100%);
+  padding:40px;
+}
+h1{margin:0 0 10px 0;font-size:32px;}
+.subtitle{color:#94a3b8;margin-bottom:30px;}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+}
+.card{
+  background:#111827;
+  border:1px solid #1f2937;
+  border-radius:14px;
+  padding:20px;
+  transition:.15s ease;
+  text-decoration:none;
+  color:white;
+}
+.card:hover{
+  transform:translateY(-4px);
+  border-color:#3b82f6;
+}
+.tag{
+  font-size:12px;
+  opacity:.6;
+  margin-bottom:10px;
+}
+.addr{
+  margin-top:15px;
+  font-family:monospace;
+  font-size:12px;
+  opacity:.6;
+}
+footer{
+  margin-top:40px;
+  font-size:12px;
+  opacity:.5;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>GingyNAS</h1>
+  <div class="subtitle">Self-Hosted Infrastructure Portal</div>
+
+  <div class="grid">
+    <a class="card" href="https://cloud.gingynas.net">
+      <div class="tag">PRIVATE</div>
+      <h2>☁ Family Cloud</h2>
+      <div class="addr">cloud.gingynas.net</div>
+    </a>
+
+    <a class="card" href="minecraft://mc.gingynas.net">
+      <div class="tag">GAME</div>
+      <h2>⛏ Minecraft</h2>
+      <div class="addr">mc.gingynas.net:25565</div>
+    </a>
+
+    <a class="card" href="ts3server://ts.gingynas.net">
+      <div class="tag">VOICE</div>
+      <h2>🎙 TeamSpeak</h2>
+      <div class="addr">ts.gingynas.net</div>
+    </a>
+  </div>
+
+  <footer>
+    © gingynas.net • Hosted via Cloudflare Edge
+  </footer>
+</div>
+</body>
+</html>
