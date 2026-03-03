@@ -292,17 +292,16 @@
     <!-- Status -->
     <div class="card wide" onclick="openService('status')" role="button" tabindex="0">
       <div class="head">
-        <div class="title"><span class="icon">📈</span>Status</div>
-        <span class="tag">Observability</span>
+        <div class="title"><span class="icon">📊</span>Infrastructure Status</div>
+        <span class="tag">Live</span>
       </div>
       <div class="desc">
-        Recommended: run Uptime Kuma on Unraid and expose <b>status.gingynas.net</b> (or keep it private on Tailscale).
-        This tile is ready—just set the URL.
+        Real-time availability and performance monitoring for GingyNAS core services.
       </div>
       <div class="row">
-        <div class="addr" id="statusAddr">status.gingynas.net</div>
+        <div class="addr">status.gingynas.net/status/core</div>
         <div class="btns">
-          <span class="btn secondary" aria-hidden="true">Setup hint</span>
+          <span class="btn secondary" aria-hidden="true">Uptime Dashboard</span>
           <span class="btn" aria-hidden="true">Open →</span>
         </div>
       </div>
@@ -440,18 +439,20 @@
     },
 
     status: {
-      title: "Status",
-      addr: "status.gingynas.net",
-      desc: "Recommended: Uptime Kuma (or equivalent) for public/private status dashboards.",
-      primaryLabel: "Open",
+      title: "GingyNAS Infrastructure Status",
+      addr: "status.gingynas.net/status/core",
+      desc: "Live uptime and performance monitoring for core services including storage, media, game, and voice infrastructure.",
+      primaryLabel: "Open Dashboard",
       primaryHref: () => CFG.statusUrl,
-      how: () => `
-        <b>Setup (later, on Unraid):</b>
-        <ol>
-          <li>Install <b>Uptime Kuma</b> from Community Apps</li>
-          <li>Expose it at <b>status.gingynas.net</b> via NPM</li>
-          <li>Optionally restrict it (Cloudflare Access / IP allowlist / Tailscale)</li>
-        </ol>
+      how: `
+        <b>Monitored Services:</b>
+        <ul>
+          <li>Main Server (Unraid)</li>
+          <li>Nextcloud</li>
+          <li>Plex</li>
+          <li>Minecraft</li>
+          <li>TeamSpeak</li>
+        </ul>
       `,
       showAlt: false,
       showCopyPrimary: false
