@@ -241,6 +241,24 @@
   </div>
 
   <div class="grid">
+    <!-- Dashboards / Login -->
+    <div class="card wide" onclick="openService('dashboards')" role="button" tabindex="0">
+      <div class="head">
+        <div class="title"><span class="icon">🔐</span>Dashboards</div>
+        <span class="tag">Authentik</span>
+      </div>
+      <div class="desc">
+        Sign in to access the family homepage. Admin areas require an admin account.
+      </div>
+      <div class="row">
+        <div class="addr">home.gingynas.net • admin.gingynas.net</div>
+        <div class="btns">
+          <span class="btn secondary" aria-hidden="true">Details</span>
+          <span class="btn" aria-hidden="true">Open →</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Family Cloud -->
     <div class="card" onclick="openService('cloud')" role="button" tabindex="0">
       <div class="head">
@@ -299,7 +317,7 @@
         Real-time availability and performance monitoring for GingyNAS core services.
       </div>
       <div class="row">
-        <div class="addr">status.gingynas.net/status/core</div>
+        <div class="addr" id="statusAddr">status.gingynas.net/status/core</div>
         <div class="btns">
           <span class="btn secondary" aria-hidden="true">Uptime Dashboard</span>
           <span class="btn" aria-hidden="true">Open →</span>
@@ -307,23 +325,42 @@
       </div>
     </div>
 
-    <!-- Admin (hidden unless LAN/Tailscale) -->
-    <div class="card wide" id="adminCard" style="display:none" onclick="openService('admin')" role="button" tabindex="0">
+    <!-- Admin Portal (Authentik-protected, admin-only policy) -->
+    <div class="card wide" onclick="openService('adminportal')" role="button" tabindex="0">
       <div class="head">
-        <div class="title"><span class="icon">🔧</span>Admin</div>
-        <span class="tag">LAN / Tailscale only</span>
+        <div class="title"><span class="icon">🛡️</span>Admin Portal</div>
+        <span class="tag">Restricted</span>
       </div>
       <div class="desc">
-        Admin links only show when you’re likely on LAN/Tailscale. (Not a security boundary—just UI.)
+        Admin-only area. You may be prompted to sign in (or denied) based on your account.
       </div>
       <div class="row">
-        <div class="addr" id="adminAddr">npm.gingynas.net</div>
+        <div class="addr">admin.gingynas.net</div>
+        <div class="btns">
+          <span class="btn secondary" aria-hidden="true">Details</span>
+          <span class="btn" aria-hidden="true">Open →</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ops (hidden unless toggle) -->
+    <div class="card wide" id="opsCard" style="display:none" onclick="openService('ops')" role="button" tabindex="0">
+      <div class="head">
+        <div class="title"><span class="icon">🔧</span>Ops</div>
+        <span class="tag">LAN / Tailscale</span>
+      </div>
+      <div class="desc">
+        Internal ops links (NPM/Unraid). Hidden by default. Toggle with <b>Ctrl+Shift+A</b>.
+      </div>
+      <div class="row">
+        <div class="addr" id="opsAddr">npm.gingynas.net</div>
         <div class="btns">
           <span class="btn secondary" aria-hidden="true">Copy</span>
           <span class="btn" aria-hidden="true">Open →</span>
         </div>
       </div>
     </div>
+
   </div>
 
   <div class="footer">
@@ -362,6 +399,11 @@
   // ========= CONFIG (edit these) =========
   const CFG = {
     cloudUrl: "https://cloud.gingynas.net",
+
+    // Protected apps behind Authentik (via NPM forward-auth)
+    homeUrl: "https://home.gingynas.net",
+    adminPortalUrl: "https://admin.gingynas.net",
+
     mcHost: "mc.gingynas.net",
     mcPortJava: 25565,
     // Set true only if you actually support Bedrock (19132) or have Geyser/crossplay:
@@ -369,20 +411,43 @@
     mcPortBedrock: 19132,
 
     tsHost: "ts.gingynas.net",
-    // Status page URL (set once you deploy Uptime Kuma etc.)
+
+    // Status page URL
     statusUrl: "https://status.gingynas.net/status/core",
 
-    // Optional admin links (show only on LAN/Tailscale by heuristic)
+    // Ops links (keep private)
     npmUrl: "http://gingynas.tailb9a2cf.ts.net/:7818/",
-    unraidUrl: "http://gingynas.tailb9a2cf.ts.net/" // or https://unraid.gingynas.net (if you expose it privately)
+    unraidUrl: "http://gingynas.tailb9a2cf.ts.net/:8080/"
   };
 
   // ========= Service definitions =========
   const services = {
+    dashboards: {
+      title: "Dashboards (Authentik login)",
+      addr: () => `Family: ${new URL(CFG.homeUrl).host} • Admin: ${new URL(CFG.adminPortalUrl).host}`,
+      desc: "These links go directly to the protected apps. If you aren’t logged in, Authentik will prompt you.",
+      primaryLabel: "Open Family Homepage",
+      primaryHref: () => CFG.homeUrl,
+      showAlt: true,
+      altLabel: "Open Admin Portal",
+      altHref: () => CFG.adminPortalUrl,
+      showCopyPrimary: false,
+      how: () => `
+        <b>How it works:</b>
+        <ol>
+          <li>Click <b>Open Family Homepage</b> → if you’re not logged in, Authentik prompts you.</li>
+          <li>Click <b>Open Admin Portal</b> → Authentik allows only admins (or whoever your policy allows).</li>
+        </ol>
+        <div style="margin-top:10px; color: rgba(234,240,255,.58); font-size:13px;">
+          This page intentionally does <b>not</b> link to /outpost.goauthentik.io/start directly — NPM forward-auth handles the redirect reliably.
+        </div>
+      `
+    },
+
     cloud: {
       title: "Family Cloud",
       addr: "cloud.gingynas.net",
-      desc: "Nextcloud (or equivalent). Login required.",
+      desc: "Nextcloud. Login required.",
       primaryLabel: "Open",
       primaryHref: () => CFG.cloudUrl,
       how: `
@@ -400,7 +465,6 @@
       title: "Minecraft (Java)",
       addr: () => `${CFG.mcHost}:${CFG.mcPortJava}`,
       desc: "Best default: copy the address and add it in-game (works everywhere).",
-      // primary is copy (most reliable)
       primaryLabel: "Copy address",
       primaryHref: () => "#",
       how: () => `
@@ -441,7 +505,7 @@
     status: {
       title: "GingyNAS Infrastructure Status",
       addr: "https://status.gingynas.net/status/core",
-      desc: "Live uptime and performance monitoring for core services including storage, media, game, and voice infrastructure.",
+      desc: "Live uptime and performance monitoring for core services.",
       primaryLabel: "Open Dashboard",
       primaryHref: () => CFG.statusUrl,
       how: `
@@ -458,10 +522,10 @@
       showCopyPrimary: false
     },
 
-    admin: {
-      title: "Admin",
+    ops: {
+      title: "Ops (internal)",
       addr: () => `NPM: ${CFG.npmUrl} • Unraid: ${CFG.unraidUrl}`,
-      desc: "Quick admin links. UI-only gating based on network heuristics.",
+      desc: "Internal ops links intended for LAN/Tailscale.",
       primaryLabel: "Open NPM",
       primaryHref: () => CFG.npmUrl,
       how: () => `
@@ -471,7 +535,7 @@
           <li><b>Unraid:</b> ${CFG.unraidUrl}</li>
         </ul>
         <div style="margin-top:10px; color: rgba(234,240,255,.58); font-size:13px;">
-          If you want real protection, keep these behind Tailscale or Cloudflare Access.
+          Keep these behind Tailscale or strict Authentik policies. Don’t expose them publicly.
         </div>
       `,
       showAlt: true,
@@ -565,51 +629,33 @@
     return true;
   }
 
-  // ========= Admin card heuristics =========
-  // We can’t reliably detect your LAN/Tailscale from a static site without your own API,
-  // so we use a *hint* based on local network names + a manual toggle (Ctrl+Shift+A).
-  function likelyLocal(){
-    const h = location.hostname.toLowerCase();
-    // If you're hitting the site via a local hostname (rare with Pages) or using a split-DNS:
-    if (h.endsWith(".local") || h.includes("tower")) return true;
-    return false;
-  }
+  // ========= Ops card toggle =========
+  let opsEnabled = false;
+  function setOpsVisible(on){
+    opsEnabled = on;
+    document.getElementById("opsCard").style.display = on ? "block" : "none";
 
-  // Manual toggle for admin card (because network detection is limited on a static edge page)
-  let adminEnabled = false;
-  function setAdminVisible(on){
-    adminEnabled = on;
-    document.getElementById("adminCard").style.display = on ? "block" : "none";
-    const dot = document.getElementById("exposureDot");
     const pill = document.getElementById("exposurePill");
     if (on){
-      dot.classList.remove("warn");
-      dot.classList.add("ok");
       pill.innerHTML = '<span class="dot"></span> Exposure: Trusted network';
     } else {
-      pill.innerHTML = '<span class="dot warn" id="exposureDot"></span> Exposure: Internet';
-      // restore dot ref (since we replaced innerHTML)
-      // quick fix: reload page styles by re-reading element; simplest is set text only:
-      // (We’ll just leave the pill updated; functionally fine.)
+      pill.innerHTML = '<span class="dot warn"></span> Exposure: Internet';
     }
   }
 
   window.addEventListener("keydown", (e) => {
     if (e.ctrlKey && e.shiftKey && (e.key === "A" || e.key === "a")){
-      setAdminVisible(!adminEnabled);
-      toast(adminEnabled ? "Admin tile enabled" : "Admin tile hidden");
+      setOpsVisible(!opsEnabled);
+      toast(opsEnabled ? "Ops tile enabled" : "Ops tile hidden");
     }
   });
 
   // ========= Init =========
   // Set addresses in tiles from config
-  document.getElementById("statusAddr").textContent = (new URL(CFG.statusUrl)).host;
-  document.getElementById("adminAddr").textContent = (new URL(CFG.npmUrl)).host;
+  document.getElementById("statusAddr").textContent = (new URL(CFG.statusUrl)).host + (new URL(CFG.statusUrl)).pathname;
+  document.getElementById("opsAddr").textContent = (new URL(CFG.npmUrl)).host;
 
-  // Show admin automatically only if we *think* local (usually false on Pages), otherwise hidden.
-  if (likelyLocal()) setAdminVisible(true);
-
-  // Accessibility: Enter key activates card
+  // Accessibility: Enter/Space activates card
   document.querySelectorAll(".card[tabindex='0']").forEach(el=>{
     el.addEventListener("keydown", (e)=>{
       if (e.key === "Enter" || e.key === " "){
